@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>RMK Software — BHU Nari Obu Weekly Roster</title>
+<style>
+:root{
+  --primary:#0f766e; --primary2:#115e59; --bg:#f4f7f8; --card:#fff;
+  --text:#17323a; --muted:#64748b; --line:#dce5e7; --danger:#b42318;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.app{max-width:1100px;margin:auto;padding:18px}
+.header{background:linear-gradient(135deg,var(--primary2),var(--primary));color:#fff;border-radius:22px;padding:22px;box-shadow:0 12px 30px #0f766e22}
+.header .top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+h1{font-size:clamp(22px,4vw,34px);margin:0 0 5px;font-weight:800}
+.subtitle{opacity:.88;font-size:14px}
+.badge{background:#ffffff1c;border:1px solid #ffffff35;border-radius:999px;padding:8px 12px;font-size:12px;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.stat{background:#ffffff12;border:1px solid #ffffff25;border-radius:15px;padding:12px}
+.stat b{display:block;font-size:21px}.stat span{font-size:11px;opacity:.82}
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
+button,.filebtn{border:0;border-radius:11px;padding:11px 14px;font-weight:700;cursor:pointer;background:#fff;color:var(--text);box-shadow:0 2px 8px #0000000c}
+button.primary{background:var(--primary);color:#fff}.danger{color:var(--danger)}
+button:active{transform:translateY(1px)}
+.search{flex:1;min-width:180px;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-size:14px;background:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 6px 20px #132b3210}
+table{width:100%;border-collapse:collapse}
+th{background:#edf7f6;color:#174e4a;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding:13px}
+td{padding:13px;border-top:1px solid var(--line);vertical-align:middle;font-size:14px}
+.day{font-weight:800}.night{color:#475569}
+.editing td[contenteditable="true"]{background:#fffdf2;outline:none}
+.actions{display:none;white-space:nowrap}.editing .actions{display:table-cell}
+.footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+.modal{position:fixed;inset:0;background:#07191dcc;display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal.show{display:flex}.modalbox{background:#fff;border-radius:18px;max-width:600px;width:100%;padding:20px}
+.modalbox h2{margin-top:0}.modalbox textarea{width:100%;min-height:230px;border:1px solid var(--line);border-radius:12px;padding:12px;font:14px/1.5 inherit}
+.modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:700px){
+  .app{padding:10px}.header{border-radius:16px;padding:17px}.header .top{display:block}
+  .badge{display:inline-block;margin-top:10px}.stats{grid-template-columns:repeat(2,1fr)}
+  .card{overflow-x:auto}table{min-width:720px}.toolbar{position:sticky;top:0;z-index:3}
+}
+@media print{
+  body{background:#fff}.app{max-width:none;padding:0}.header{box-shadow:none;color:#000;background:#fff;border:2px solid #111}
+  .badge{color:#000;border-color:#999}.toolbar,.footer,.actions{display:none!important}.card{box-shadow:none;border:1px solid #999}
+  th{background:#eee!important;color:#000}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="header">
+    <div class="top">
+      <div>
+        <h1 id="facilityTitle">BHU Nari Obu</h1>
+        <div class="subtitle" id="rosterTitle">Weekly Roster • October 2026</div>
+      </div>
+      <div class="badge">RMK Software</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="daysCount">7</b><span>Days</span></div>
+      <div class="stat"><b id="lhvCount">3</b><span>LHV Staff</span></div>
+      <div class="stat"><b id="ayaCount">2</b><span>Aya Staff</span></div>
+      <div class="stat"><b id="guardCount">2</b><span>Security Guards</span></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="period" aria-label="Change roster month and year">
+      <label for="monthSelect">MONTH</label>
+      <select id="monthSelect" onchange="changePeriod()"></select>
+      <label for="yearSelect">YEAR</label>
+      <select id="yearSelect" onchange="changePeriod()"></select>
+    </div>
+    <input id="search" class="search" placeholder="Search staff or day…" oninput="renderFilter()">
+    <button class="primary" onclick="shareWhatsApp()">WhatsApp</button>
+    <button onclick="shareNative()">Share</button>
+    <button onclick="copyText()">Copy</button>
+    <button onclick="downloadCard()">Share Card (PNG)</button>
+    <button onclick="window.print()">Print / PDF</button>
+    <button onclick="toggleEdit()">Edit Roster</button>
+    <button class="danger" onclick="resetData()">Reset</button>
+  </div>
+
+  <div class="card">
+    <table id="rosterTable">
+      <thead><tr>
+        <th>Day</th><th>LHV</th><th>Evening / Night</th><th>Aya</th><th>Security Guard</th><th class="actions">Actions</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="footer">Works offline in Chrome • Data is saved on this device • Edit, print, copy or share anytime.</div>
+</div>
+
+<div class="modal" id="shareModal">
+  <div class="modalbox">
+    <h2>Roster Share Text</h2>
+    <textarea id="shareText"></textarea>
+    <div class="modal-actions">
+      <button class="primary" onclick="copyText();closeModal()">Copy Text</button>
+      <button onclick="shareNative();closeModal()">Share</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY="bhu_nari_obu_roster_v2";
+const PERIOD_KEY="bhu_nari_obu_roster_period_v1";
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const savedPeriod=JSON.parse(localStorage.getItem(PERIOD_KEY)||"null")||{month:9,year:2026};
+let selectedMonth=Number(savedPeriod.month);
+let selectedYear=Number(savedPeriod.year);
+const defaultData=[
+ {day:"Monday",lhv:"Sana Tahir",night:"Evening / Night",aya:"Aneeeba",guard:"Mahir"},
+ {day:"Tuesday",lhv:"Sana Tahir",night:"Evening / Night",aya:"Aneeeba",guard:"Mahir"},
+ {day:"Wednesday",lhv:"Nazish",night:"Evening / Night",aya:"Nageena",guard:"Mahir"},
+ {day:"Thursday",lhv:"Nazish",night:"Evening / Night",aya:"Nageena",guard:"Midrar ULLAH"},
+ {day:"Friday",lhv:"Sana Faqir",night:"Evening / Night",aya:"Aneeeba",guard:"Midrar ULLAH"},
+ {day:"Saturday",lhv:"Sana Faqir",night:"Evening / Night",aya:"Nageena",guard:"Midrar ULLAH"},
+ {day:"Sunday",lhv:"Nazish",night:"",aya:"Nageena",guard:"Mahir"}
+];
+let data=JSON.parse(localStorage.getItem(KEY)||"null")||defaultData;
+let editing=false;
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function periodLabel(){return `${MONTHS[selectedMonth]} ${selectedYear}`}
+function updatePeriodUI(){
+  document.getElementById("monthSelect").value=String(selectedMonth);
+  document.getElementById("yearSelect").value=String(selectedYear);
+  document.getElementById("rosterTitle").textContent=`Weekly Roster • ${periodLabel()}`;
+  document.title=`BHU Nari Obu — Weekly Roster ${periodLabel()}`;
+}
+function initPeriodSelectors(){
+  const m=document.getElementById("monthSelect");
+  const y=document.getElementById("yearSelect");
+  m.innerHTML=MONTHS.map((name,i)=>`<option value="${i}">${name}</option>`).join("");
+  let years=[];
+  for(let yv=2020;yv<=2040;yv++) years.push(yv);
+  y.innerHTML=years.map(yv=>`<option value="${yv}">${yv}</option>`).join("");
+  updatePeriodUI();
+}
+function changePeriod(){
+  selectedMonth=Number(document.getElementById("monthSelect").value);
+  selectedYear=Number(document.getElementById("yearSelect").value);
+  localStorage.setItem(PERIOD_KEY,JSON.stringify({month:selectedMonth,year:selectedYear}));
+  updatePeriodUI();
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));updateStats()}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase().trim();
+ const tb=document.getElementById("tbody");tb.innerHTML="";
+ data.forEach((r,i)=>{
+   const hay=Object.values(r).join(" ").toLowerCase();
+   if(q && !hay.includes(q)) return;
+   const tr=document.createElement("tr");
+   tr.innerHTML=`<td class="day">${esc(r.day)}</td>
+   <td contenteditable="${editing}" data-i="${i}" data-k="lhv">${esc(r.lhv)}</td>
+   <td class="night" contenteditable="${editing}" data-i="${i}" data-k="night">${esc(r.night)}</td>
+   <td contenteditable="${editing}" data-i="${i}" data-k="aya">${esc(r.aya)}</td>
+   <td contenteditable="${editing}" data-i="${i}" data-k="guard">${esc(r.guard)}</td>
+   <td class="actions"><button class="danger" onclick="removeRow(${i})">Delete</button></td>`;
+   tb.appendChild(tr);
+ });
+ document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
+   el.oninput=()=>{data[+el.dataset.i][el.dataset.k]=el.innerText.trim();save()};
+ });
+ updateStats();
+}
+function updateStats(){
+ document.getElementById("daysCount").textContent=data.length;
+ document.getElementById("lhvCount").textContent=new Set(data.map(x=>x.lhv).filter(Boolean)).size;
+ document.getElementById("ayaCount").textContent=new Set(data.map(x=>x.aya).filter(Boolean)).size;
+ document.getElementById("guardCount").textContent=new Set(data.map(x=>x.guard).filter(Boolean)).size;
+}
+function renderFilter(){render()}
+function toggleEdit(){
+ editing=!editing;
+ document.body.classList.toggle("editing",editing);
+ event.target.textContent=editing?"Done Editing":"Edit Roster";
+ if(editing && !document.getElementById("addDay")) {
+   const b=document.createElement("button");b.id="addDay";b.textContent="+ Add Day";b.onclick=addDay;
+   document.querySelector(".toolbar").insertBefore(b,document.querySelector(".toolbar").children[6]);
+ }
+ if(!editing){document.getElementById("addDay")?.remove()}
+ render();
+}
+function addDay(){
+ data.push({day:"New Day",lhv:"",night:"Evening / Night",aya:"",guard:""});
+ save();render();
+}
+function removeRow(i){if(confirm("Delete this roster row?")){data.splice(i,1);save();render()}}
+function rosterText(){
+ let s=`🏥 *BHU Nari Obu*\n📅 *Weekly Roster — ${periodLabel()}*\n\n`;
+ data.forEach(r=>{s+=`📌 *${r.day}*\n• LHV: ${r.lhv||"—"}\n• Evening/Night: ${r.night||"—"}\n• Aya: ${r.aya||"—"}\n• Security Guard: ${r.guard||"—"}\n\n`});
+ s+=`#BHU #NariObu #WeeklyRoster #DutyRoster`;
+ return s;
+}
+function copyText(){
+ navigator.clipboard?.writeText(rosterText()).then(()=>alert("Roster copied.")).catch(()=>{
+   document.getElementById("shareText").value=rosterText();document.getElementById("shareModal").classList.add("show");
+ });
+}
+function shareWhatsApp(){
+ const url="https://wa.me/?text="+encodeURIComponent(rosterText());
+ window.open(url,"_blank");
+}
+async function shareNative(){
+ const text=rosterText();
+ if(navigator.share){try{await navigator.share({title:"RMK Software — BHU Nari Obu Weekly Roster",text})}catch(e){}}
+ else {document.getElementById("shareText").value=text;document.getElementById("shareModal").classList.add("show")}
+}
+function closeModal(){document.getElementById("shareModal").classList.remove("show")}
+function resetData(){if(confirm("Restore the original roster from the uploaded image?")){data=structuredClone(defaultData);save();render()}}
+function downloadCard(){
+ const W=1400,H=190+data.length*105;
+ const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+ x.fillStyle="#f4f7f8";x.fillRect(0,0,W,H);
+ x.fillStyle="#0f766e";roundRect(x,35,30,W-70,120,24,true);
+ x.fillStyle="#fff";x.font="800 42px Arial";x.fillText("RMK Software",65,82);
+ x.font="24px Arial";x.fillText(`Weekly Roster • ${periodLabel()}`,65,120);
+ const y0=185, cols=[50,270,570,870,1100];
+ x.fillStyle="#e6f3f1";x.fillRect(35,y0,W-70,62);
+ x.fillStyle="#174e4a";x.font="700 20px Arial";
+ ["DAY","LHV","EVENING / NIGHT","AYA","SECURITY GUARD"].forEach((h,i)=>x.fillText(h,cols[i],y0+38));
+ x.font="20px Arial";
+ data.forEach((r,i)=>{
+   const y=y0+62+i*105;
+   x.fillStyle="#fff";x.fillRect(35,y,W-70,104);
+   x.strokeStyle="#dce5e7";x.strokeRect(35,y,W-70,104);
+   x.fillStyle="#17323a";x.font="700 20px Arial";x.fillText(r.day,cols[0],y+40);
+   x.font="20px Arial";x.fillText(r.lhv||"—",cols[1],y+40);x.fillText(r.night||"—",cols[2],y+40);x.fillText(r.aya||"—",cols[3],y+40);x.fillText(r.guard||"—",cols[4],y+40);
+ });
+ c.toBlob(blob=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`RMK_Software_BHU_Nari_Obu_Weekly_Roster_${MONTHS[selectedMonth]}_${selectedYear}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});
+}
+function roundRect(ctx,x,y,w,h,r,fill){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();if(fill)ctx.fill()}
+initPeriodSelectors();
+render();
+</script>
+</body>
+</html>
